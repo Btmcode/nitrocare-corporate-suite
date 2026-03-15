@@ -10,17 +10,16 @@ const Footer = () => {
         { name: 'Hospital', href: '/products/hospital' },
         { name: 'Nursing Home', href: '/products/nursing-home' },
         { name: 'Homecare', href: '/products/homecare' },
-        { name: 'Service & Support', href: '/support' },
+        { name: 'All Products', href: '/products' },
       ]
     },
     {
       title: 'Company',
       links: [
         { name: 'About us', href: '/about' },
-        { name: 'History', href: '/about/history' },
-        { name: 'Sustainability', href: '/about/responsibility' },
         { name: 'Career', href: '/career' },
         { name: 'News', href: '/news' },
+        { name: 'Contact', href: '/contact' },
       ]
     },
     {
@@ -28,8 +27,6 @@ const Footer = () => {
       links: [
         { name: 'Download Center', href: '/downloads' },
         { name: 'Contact', href: '/contact' },
-        { name: 'FAQ', href: '/support/faq' },
-        { name: 'Quality Management', href: '/about/quality' },
       ]
     }
   ];
@@ -109,10 +106,9 @@ const Footer = () => {
 
         <div className="border-t border-white/10 pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 text-[10px] font-bold uppercase tracking-[0.2em] text-blue-100/40">
-            <Link href="/imprint" className="hover:text-white transition-colors">Imprint</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Use</Link>
-            <Link href="/sitemap" className="hover:text-white transition-colors">Sitemap</Link>
+            <Link href="/about" className="hover:text-white transition-colors">About Us</Link>
+            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+            <Link href="/downloads" className="hover:text-white transition-colors">Downloads</Link>
           </div>
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-blue-100/30">
             © {new Date().getFullYear()} Nitrocare / Gökler Group.

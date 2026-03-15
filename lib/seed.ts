@@ -1,153 +1,146 @@
-import { db } from './firebase';
-import { collection, doc, setDoc, getDocs, query, where } from 'firebase/firestore';
+import prisma from './prisma';
+import { hash } from 'bcryptjs';
 
 export const seedData = async () => {
+  // Check if already seeded
+  const productCount = await prisma.product.count();
+  const categoryCount = await prisma.category.count();
+  
+  if (productCount > 0 && categoryCount > 0) {
+    console.log('Data already seeded. Skipping.');
+    return;
+  }
+
   const categories = [
     {
       id: 'hospital',
       name: 'Hospital',
       slug: 'hospital',
-      description: 'Innovative beds and furniture for clinics and acute care.',
-      image: 'https://picsum.photos/seed/nitro-hosp/1200/800'
+      description: 'Innovative hospital beds, intensive care beds, and paediatric furniture.',
+      image: 'https://www.nitrocare.com.tr/fileadmin/_processed_/1/6/csm_navigation-evario_01_0159aeda9f.webp'
     },
     {
       id: 'nursing-home',
       name: 'Nursing Home',
       slug: 'nursing-home',
-      description: 'Comfort and safety for residents and nursing staff in long-term care.',
-      image: 'https://picsum.photos/seed/nitro-care/1200/800'
+      description: 'Beds and furniture designed for long-term care facilities, emphasizing safety.',
+      image: 'https://www.nitrocare.com.tr/fileadmin/_processed_/c/5/csm_Stiegelmeyer-Evario-one-FS-Titel_0035_b2bc7c63d5.webp'
     },
     {
       id: 'homecare',
       name: 'Homecare',
       slug: 'homecare',
-      description: 'Independence and comfort in your own four walls.',
-      image: 'https://picsum.photos/seed/nitro-home/1200/800'
+      description: 'Comfortable and functional beds for private home care settings.',
+      image: 'https://www.nitrocare.com.tr/fileadmin/_processed_/b/2/csm_Puro_weiss_c808c184a2.webp'
     }
   ];
 
   const products = [
     {
-      id: 'hb-6000',
-      name: 'HB 6000',
-      slug: 'hb-6000',
+      id: 'evario',
+      name: 'Evario',
+      slug: 'evario',
       categorySlug: 'hospital',
-      price: 4500,
-      description: 'The premium hospital bed for intensive care and general wards. The HB 6000 is the intelligent solution for modern healthcare facilities, offering maximum safety and comfort.',
-      image: 'https://picsum.photos/seed/nitro-hb6000/1200/800',
-      features: [
-        'Lateral tilt function',
-        'Integrated weighing system',
-        'X-ray translucent',
-        'Advanced nurse control',
-        'Electric height adjustment',
-        'Trendelenburg position'
-      ],
-      specs: {
-        'External dimensions': '225 x 105 cm',
-        'Mattress base': '200 x 90 cm',
+      price: 4800,
+      description: 'The Evario hospital bed is distinguished by innovative control units, high level of safety and comfort, and excellent hygiene properties.',
+      image: 'https://www.nitrocare.com.tr/fileadmin/_processed_/1/6/csm_navigation-evario_01_0159aeda9f.webp',
+      features: JSON.stringify([
+        'Innovative control units',
+        'High level of safety',
+        'Excellent hygiene properties',
+        'Ergonomic design'
+      ]),
+      specs: JSON.stringify({
         'Safe working load': '270 kg',
-        'Height adjustment': '40 - 85 cm'
-      },
-      downloads: [
-        { name: 'HB 6000 Brochure', url: '#' },
-        { name: 'Technical Manual', url: '#' }
-      ]
+        'Height adjustment': '32 - 91 cm'
+      })
     },
     {
-      id: 'hb-4000',
-      name: 'HB 4000',
-      slug: 'hb-4000',
+      id: 'evario-one',
+      name: 'Evario one',
+      slug: 'evario-one',
       categorySlug: 'hospital',
-      price: 3200,
-      description: 'The efficient and reliable hospital bed for general wards. The HB 4000 combines high durability with ease of use.',
-      image: 'https://picsum.photos/seed/nitro-hb4000/1200/800',
-      features: [
-        'Electric height adjustment',
-        'Central locking castors',
-        'Easy to clean',
-        'Battery backup',
-        'Trendelenburg position'
-      ],
-      specs: {
-        'External dimensions': '215 x 100 cm',
-        'Mattress base': '190 x 85 cm',
-        'Safe working load': '230 kg',
-        'Height adjustment': '45 - 80 cm'
-      },
-      downloads: [
-        { name: 'Product Sheet', url: '#' }
-      ]
+      price: 4200,
+      description: 'The Evario one is our versatile hospital bed that offers high quality at an attractive price.',
+      image: 'https://www.nitrocare.com.tr/fileadmin/_processed_/c/5/csm_Stiegelmeyer-Evario-one-FS-Titel_0035_b2bc7c63d5.webp',
+      features: JSON.stringify(['High quality', 'Attractive price', 'Versatile use']),
+      specs: JSON.stringify({
+        'Max patient weight': '220 kg',
+        'Casters': '125 mm'
+      })
     },
     {
-      id: 'nts-100',
-      name: 'NTS 100',
-      slug: 'nts-100',
+      id: 'puro',
+      name: 'Puro',
+      slug: 'puro',
       categorySlug: 'hospital',
-      price: 1800,
-      description: 'The high-performance patient transfer stretcher. Designed for rapid response and safe transport within the hospital.',
-      image: 'https://picsum.photos/seed/nitro-nts100/1200/800',
-      features: [
-        'Hydraulic height adjustment',
-        'Trendelenburg position',
-        'Foldable side rails',
-        'Oxygen cylinder holder',
-        'Central locking castors'
-      ],
-      specs: {
-        'External dimensions': '210 x 80 cm',
-        'Safe working load': '200 kg',
-        'Castor diameter': '200 mm'
-      },
-      downloads: [
-        { name: 'NTS Series Catalog', url: '#' }
-      ]
+      price: 3900,
+      description: 'The Puro sets high standards in hygiene, ease of use, comfort, and modern design.',
+      image: 'https://www.nitrocare.com.tr/fileadmin/_processed_/b/2/csm_Puro_weiss_c808c184a2.webp',
+      features: JSON.stringify(['Hygiene standards', 'Comfortable positioning', 'Modern design']),
+      specs: JSON.stringify({
+        'Safe working load': '260 kg',
+        'Total length': '218 cm'
+      })
+    },
+    {
+      id: 'sicuro-tera',
+      name: 'Sicuro tera',
+      slug: 'sicuro-tera',
+      categorySlug: 'hospital',
+      price: 8500,
+      description: 'The Sicuro tera intensive care bed supports optimal patient positioning and care in critical settings.',
+      image: 'https://www.nitrocare.com.tr/fileadmin/_processed_/7/f/csm_Stiegelmeyer-Sicuro-tera-FS-Titel-1_SLT_c77732e4f9.webp',
+      features: JSON.stringify(['Critical care support', 'Optimal positioning', 'Integrated scale']),
+      specs: JSON.stringify({
+        'Lateral tilting': 'upto 25°',
+        'Safe working load': '280 kg'
+      })
     }
   ];
 
-  const news = [
-    {
-      id: 'news-1',
-      title: 'Nitrocare Expands Global Reach',
-      slug: 'nitrocare-expands-global-reach',
-      date: new Date('2026-03-14'),
-      excerpt: 'Nitrocare continues its international growth with new partnerships in Southeast Asia and Latin America.',
-      content: 'Nitrocare is proud to announce its expansion into new markets. Our commitment to providing high-quality medical furniture has led to significant growth in international exports...',
-      image: 'https://picsum.photos/seed/nitro-news1/800/600',
-      author: 'Corporate Communications',
-      tags: ['Corporate', 'Global']
-    },
-    {
-      id: 'news-2',
-      title: 'Innovation Award for HB Series',
-      slug: 'innovation-award-for-hb-series',
-      date: new Date('2026-03-10'),
-      excerpt: 'The HB 6000 series has been recognized for its innovative design and patient-centric features.',
-      content: 'At the latest international medical equipment fair, Nitrocare was honored with the Innovation Award for our HB 6000 hospital bed series. The jury highlighted the lateral tilt function...',
-      image: 'https://picsum.photos/seed/nitro-news2/800/600',
-      author: 'Corporate Communications',
-      tags: ['Award', 'Innovation']
-    }
-  ];
-
-  try {
-    // Seed Categories
-    for (const cat of categories) {
-      await setDoc(doc(db, 'categories', cat.id), cat);
-    }
-
-    // Seed Products
-    for (const prod of products) {
-      await setDoc(doc(db, 'products', prod.id), prod);
-    }
-
-    // Seed News
-    for (const item of news) {
-      await setDoc(doc(db, 'blogPosts', item.id), item);
-    }
-
-    console.log('Seeding completed successfully');
-  } catch (error) {
-    console.error('Error seeding data:', error);
+  // Seed Admin User
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@nitrocare.com.tr';
+  const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
+  
+  if (!existingAdmin) {
+    const hashedPassword = await hash('admin123', 12);
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash: hashedPassword,
+        isAdmin: true
+      }
+    });
+    console.log('Admin user created:', adminEmail);
   }
+
+  // Seed Categories
+  for (const category of categories) {
+    await prisma.category.upsert({
+      where: { slug: category.slug },
+      update: category,
+      create: category
+    });
+  }
+  console.log('Categories seeded');
+
+  // Seed Products
+  for (const product of products) {
+    await prisma.product.upsert({
+      where: { slug: product.slug },
+      update: product,
+      create: product
+    });
+  }
+  console.log('Products seeded');
+
+  // Seed Settings
+  await prisma.setting.upsert({
+    where: { key: 'siteConfig' },
+    update: { value: JSON.stringify({ name: 'Nitrocare', description: 'Innovative Medical Solutions' }) },
+    create: { key: 'siteConfig', value: JSON.stringify({ name: 'Nitrocare', description: 'Innovative Medical Solutions' }) }
+  });
+
+  console.log('Seeding completed successfully');
 };

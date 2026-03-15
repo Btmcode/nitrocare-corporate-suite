@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Menu, X, Search, Globe, User, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
-import { auth } from '@/lib/firebase';
-import { signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { signIn, signOut } from 'next-auth/react';
 
 const Header = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -41,13 +40,8 @@ const Header = () => {
     { name: 'Contact', href: '/contact' },
   ];
 
-  const handleLogin = async () => {
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error('Login failed', error);
-    }
+  const handleLogin = () => {
+    signIn(undefined, { callbackUrl: '/admin' });
   };
 
   return (
@@ -126,7 +120,7 @@ const Header = () => {
             </button>
           </div>
           
-          {user ? (
+          {user && (
             <div className="flex items-center gap-4">
               {isAdmin && (
                 <Link href="/admin" className="text-[10px] font-bold uppercase tracking-widest text-[#004a99] bg-blue-50 px-3 py-1 rounded-full">
@@ -134,19 +128,12 @@ const Header = () => {
                 </Link>
               )}
               <button 
-                onClick={() => signOut(auth)} 
+                onClick={() => signOut({ callbackUrl: '/' })} 
                 className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 hover:bg-[#004a99] hover:text-white transition-all"
               >
                 <User size={20} />
               </button>
             </div>
-          ) : (
-            <button 
-              onClick={handleLogin} 
-              className="text-[11px] font-bold uppercase tracking-[0.2em] text-white bg-[#004a99] px-6 py-3 rounded-sm hover:bg-[#002d5e] transition-all"
-            >
-              Login
-            </button>
           )}
         </div>
 
@@ -211,7 +198,7 @@ const Header = () => {
               </nav>
 
               <div className="mt-auto pt-8 border-t border-slate-100">
-                {user ? (
+                {user && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
@@ -219,15 +206,8 @@ const Header = () => {
                       </div>
                       <span className="font-bold text-slate-900">{user.email}</span>
                     </div>
-                    <button onClick={() => signOut(auth)} className="text-red-600 font-bold uppercase tracking-widest text-xs">Logout</button>
+                    <button onClick={() => signOut({ callbackUrl: '/' })} className="text-red-600 font-bold uppercase tracking-widest text-xs">Logout</button>
                   </div>
-                ) : (
-                  <button 
-                    onClick={handleLogin} 
-                    className="w-full bg-[#004a99] text-white py-5 rounded-sm font-bold uppercase tracking-widest"
-                  >
-                    Login to Account
-                  </button>
                 )}
               </div>
             </div>

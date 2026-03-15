@@ -4,10 +4,9 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams } from 'next/navigation';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, ChevronRight, Filter } from 'lucide-react';
+import { getProducts, getCategoryBySlug } from '@/lib/actions/db-actions';
 
 interface Product {
   id: string;
@@ -16,46 +15,14 @@ interface Product {
   description: string;
   image: string;
   categorySlug: string;
-  price?: number;
-  features?: string[];
+  price: number | null;
+  features: string | null;
 }
 
-const fallbackProducts: Product[] = [
-  {
-    id: 'hb-6000',
-    name: 'HB 6000',
-    slug: 'hb-6000',
-    description: 'The premium hospital bed for intensive care and general wards.',
-    image: 'https://picsum.photos/seed/nitro-hb6000/1200/800',
-    categorySlug: 'hospital',
-    price: 4500,
-    features: ['Lateral tilt function', 'Integrated weighing system', 'Electric height adjustment']
-  },
-  {
-    id: 'hb-4000',
-    name: 'HB 4000',
-    slug: 'hb-4000',
-    description: 'The efficient and reliable hospital bed for general wards.',
-    image: 'https://picsum.photos/seed/nitro-hb4000/1200/800',
-    categorySlug: 'hospital',
-    price: 3200,
-    features: ['Electric height adjustment', 'Central locking castors', 'Easy to clean']
-  },
-  {
-    id: 'nts-100',
-    name: 'NTS 100',
-    slug: 'nts-100',
-    description: 'The high-performance patient transfer stretcher.',
-    image: 'https://picsum.photos/seed/nitro-nts100/1200/800',
-    categorySlug: 'hospital',
-    price: 1800,
-    features: ['Hydraulic height adjustment', 'Trendelenburg position', 'Foldable side rails']
-  }
-];
-
 const CategoryPage = () => {
-  const { category } = useParams();
+  const { category: categorySlug } = useParams();
   const [products, setProducts] = useState<Product[]>([]);
+  const [category, setCategory] = useState<any>(null);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -64,29 +31,36 @@ const CategoryPage = () => {
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
 
-  const allFeatures = Array.from(new Set(products.flatMap(p => p.features || [])));
+  // Parse features safely
+  const getParsedFeatures = (product: Product): string[] => {
+    try {
+      return product.features ? JSON.parse(product.features) : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const allFeatures = Array.from(new Set(products.flatMap(p => getParsedFeatures(p))));
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const q = query(collection(db, 'products'), where('categorySlug', '==', category));
-        const querySnapshot = await getDocs(q);
-        const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Product));
-        const finalData = data.length > 0 ? data : fallbackProducts.map(p => ({ ...p, categorySlug: category as string }));
-        setProducts(finalData);
-        setFilteredProducts(finalData);
+        const [productsData, catData] = await Promise.all([
+          getProducts(categorySlug as string),
+          getCategoryBySlug(categorySlug as string)
+        ]);
+        setProducts(productsData as Product[]);
+        setFilteredProducts(productsData as Product[]);
+        setCategory(catData);
       } catch (error) {
-        console.error('Error fetching products:', error);
-        const finalData = fallbackProducts.map(p => ({ ...p, categorySlug: category as string }));
-        setProducts(finalData);
-        setFilteredProducts(finalData);
+        console.error('Error fetching category data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, [category]);
+    fetchData();
+  }, [categorySlug]);
 
   useEffect(() => {
     let result = products;
@@ -99,9 +73,10 @@ const CategoryPage = () => {
 
     // Features Filter
     if (selectedFeatures.length > 0) {
-      result = result.filter(p => 
-        selectedFeatures.every(f => p.features?.includes(f))
-      );
+      result = result.filter(p => {
+        const pFeatures = getParsedFeatures(p);
+        return selectedFeatures.every(f => pFeatures.includes(f));
+      });
     }
 
     setFilteredProducts(result);
@@ -113,21 +88,27 @@ const CategoryPage = () => {
     );
   };
 
+  if (loading) return (
+    <div className="pt-32 pb-24 flex items-center justify-center min-h-[60vh]">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+  );
+
   return (
     <div className="pt-32 pb-24">
       <div className="max-w-7xl mx-auto px-6">
-        <Link href="/products" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 mb-12 transition-colors">
+        <Link href="/products" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-slate-500 hover:text-blue-600 mb-12 transition-colors font-sans">
           <ArrowLeft size={16} /> Back to categories
         </Link>
 
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
           <div>
-            <h1 className="text-sm font-bold uppercase tracking-[0.3em] text-blue-600 mb-4">Category</h1>
-            <h2 className="text-5xl font-serif font-bold text-slate-900 capitalize">{category} Beds</h2>
+            <h1 className="text-sm font-bold uppercase tracking-[0.3em] text-blue-600 mb-4 font-sans">Category</h1>
+            <h2 className="text-5xl font-serif font-bold text-slate-900 capitalize">{category?.name || categorySlug}</h2>
           </div>
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 border px-4 py-2 rounded-sm text-sm font-bold uppercase tracking-widest transition-colors ${showFilters ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 hover:bg-slate-50'}`}
+            className={`flex items-center gap-2 border px-4 py-2 rounded-sm text-sm font-bold uppercase tracking-widest transition-colors font-sans ${showFilters ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 hover:bg-slate-50'}`}
           >
             <Filter size={16} /> {showFilters ? 'Hide Filters' : 'Show Filters'}
           </button>
@@ -146,7 +127,7 @@ const CategoryPage = () => {
                 <div className="sticky top-32 space-y-10">
                   {/* Price Range */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-900 mb-6 border-b border-slate-100 pb-2">Price Range</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-900 mb-6 border-b border-slate-100 pb-2 font-sans">Price Range</h4>
                     <div className="space-y-4">
                       <input 
                         type="range" 
@@ -157,7 +138,7 @@ const CategoryPage = () => {
                         onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
                         className="w-full h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                       />
-                      <div className="flex justify-between text-xs font-bold text-slate-500">
+                      <div className="flex justify-between text-xs font-bold text-slate-500 font-sans">
                         <span>$0</span>
                         <span>Up to ${priceRange[1]}</span>
                       </div>
@@ -166,7 +147,7 @@ const CategoryPage = () => {
 
                   {/* Features */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-900 mb-6 border-b border-slate-100 pb-2">Key Features</h4>
+                    <h4 className="text-xs font-bold uppercase tracking-widest text-slate-900 mb-6 border-b border-slate-100 pb-2 font-sans">Key Features</h4>
                     <div className="space-y-3">
                       {allFeatures.map(feature => (
                         <label key={feature} className="flex items-center gap-3 cursor-pointer group">
@@ -187,7 +168,7 @@ const CategoryPage = () => {
                       setPriceRange([0, 10000]);
                       setSelectedFeatures([]);
                     }}
-                    className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors"
+                    className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-red-500 transition-colors font-sans"
                   >
                     Reset All Filters
                   </button>
@@ -206,7 +187,7 @@ const CategoryPage = () => {
                     setPriceRange([0, 10000]);
                     setSelectedFeatures([]);
                   }}
-                  className="mt-4 text-blue-600 font-bold uppercase tracking-widest text-xs"
+                  className="mt-4 text-blue-600 font-bold uppercase tracking-widest text-xs font-sans"
                 >
                   Clear Filters
                 </button>
@@ -221,7 +202,7 @@ const CategoryPage = () => {
                     transition={{ delay: idx * 0.1 }}
                     className="group border border-slate-100 p-4 hover:border-blue-200 hover:shadow-xl transition-all duration-300 bg-white"
                   >
-                    <Link href={`/products/${category}/${product.slug}`} className="block">
+                    <Link href={`/products/${categorySlug}/${product.slug}`} className="block">
                       <div className="relative h-64 overflow-hidden rounded-sm mb-6 bg-slate-50">
                         <Image 
                           src={product.image} 
@@ -236,27 +217,27 @@ const CategoryPage = () => {
                           {product.name}
                         </h3>
                         {product.price && (
-                          <span className="text-sm font-bold text-slate-900">${product.price}</span>
+                          <span className="text-sm font-bold text-slate-900 font-sans">${product.price}</span>
                         )}
                       </div>
                       <p className="text-slate-500 text-sm mb-6 line-clamp-2">
                         {product.description}
                       </p>
                       <div className="flex flex-wrap gap-2 mb-6">
-                        {product.features?.slice(0, 2).map(f => (
-                          <span key={f} className="text-[9px] font-bold uppercase tracking-widest bg-slate-50 text-slate-400 px-2 py-1 rounded-full">
+                        {getParsedFeatures(product).slice(0, 2).map(f => (
+                          <span key={f} className="text-[9px] font-bold uppercase tracking-widest bg-slate-50 text-slate-400 px-2 py-1 rounded-full font-sans">
                             {f}
                           </span>
                         ))}
-                        {product.features && product.features.length > 2 && (
-                          <span className="text-[9px] font-bold uppercase tracking-widest bg-slate-50 text-slate-400 px-2 py-1 rounded-full">
-                            +{product.features.length - 2} More
+                        {getParsedFeatures(product).length > 2 && (
+                          <span className="text-[9px] font-bold uppercase tracking-widest bg-slate-50 text-slate-400 px-2 py-1 rounded-full font-sans">
+                            +{getParsedFeatures(product).length - 2} More
                           </span>
                         )}
                       </div>
                       <div className="flex justify-between items-center border-t border-slate-50 pt-4">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Model Series</span>
-                        <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-blue-600">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 font-sans">Model Series</span>
+                        <span className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest text-blue-600 font-sans">
                           Details <ChevronRight size={14} />
                         </span>
                       </div>

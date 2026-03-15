@@ -2,8 +2,8 @@
 
 @layer base {
   :root {
-    --stiegelmeyer-blue: #004a99;
-    --stiegelmeyer-dark: #002d5e;
+    --nitrocare-blue: #004a99;
+    --nitrocare-dark: #002d5e;
   }
 
   html {
@@ -26,11 +26,11 @@
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center px-8 py-4 bg-[#004a99] text-white font-bold uppercase tracking-widest text-xs transition-all hover:bg-[#002d5e] active:scale-95;
+    @apply inline-flex items-center justify-center px-8 py-4 bg-[var(--nitrocare-blue)] text-white font-bold uppercase tracking-widest text-xs transition-all hover:bg-[var(--nitrocare-dark)] active:scale-95;
   }
 
   .btn-outline {
-    @apply inline-flex items-center justify-center px-8 py-4 border-2 border-[#004a99] text-[#004a99] font-bold uppercase tracking-widest text-xs transition-all hover:bg-[#004a99] hover:text-white active:scale-95;
+    @apply inline-flex items-center justify-center px-8 py-4 border-2 border-[var(--nitrocare-blue)] text-[var(--nitrocare-blue)] font-bold uppercase tracking-widest text-xs transition-all hover:bg-[var(--nitrocare-blue)] hover:text-white active:scale-95;
   }
 }
 

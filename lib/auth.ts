@@ -62,4 +62,5 @@ export const authOptions = {
     strategy: "jwt" as const,
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development' || true, // Temporarily true to debug Vercel error
 };

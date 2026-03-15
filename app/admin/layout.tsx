@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
 import { LayoutDashboard, Package, Newspaper, Settings, LogOut, Home, Users, FileText, MessageSquare, Database } from 'lucide-react';
@@ -10,12 +10,15 @@ import { signOut } from 'next-auth/react';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isLoginPage = pathname === '/admin/login';
 
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
+    if (!loading && !isLoginPage && (!user || !isAdmin)) {
       router.push('/admin/login');
     }
-  }, [user, loading, isAdmin, router]);
+  }, [user, loading, isAdmin, router, isLoginPage]);
 
   if (loading) {
     return (
@@ -23,6 +26,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
+  }
+
+  // If it's the login page, just render children without sidebar
+  if (isLoginPage) {
+    return <>{children}</>;
   }
 
   if (!user || !isAdmin) return null;

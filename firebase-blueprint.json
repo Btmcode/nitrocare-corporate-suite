@@ -1,0 +1,105 @@
+{
+  "entities": {
+    "Category": {
+      "title": "Category",
+      "description": "Product categories for the catalog",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "image": { "type": "string" },
+        "slug": { "type": "string" }
+      },
+      "required": ["name", "slug"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Individual product details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "categorySlug": { "type": "string" },
+        "price": { "type": "number" },
+        "description": { "type": "string" },
+        "features": { "type": "array", "items": { "type": "string" } },
+        "specs": { "type": "object" },
+        "images": { "type": "array", "items": { "type": "string" } },
+        "downloads": { 
+          "type": "array", 
+          "items": { 
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "url": { "type": "string" }
+            }
+          }
+        },
+        "relatedProductIds": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "slug", "categoryId"]
+    },
+    "BlogPost": {
+      "title": "Blog Post",
+      "description": "Corporate news and blog articles",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "slug": { "type": "string" },
+        "content": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "author": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "image": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["title", "slug", "content"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Application users and admins",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "editor", "user"] },
+        "name": { "type": "string" }
+      },
+      "required": ["email", "role"]
+    },
+    "Download": {
+      "title": "Download",
+      "description": "General downloadable documents",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "url": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "url"]
+    }
+  },
+  "firestore": {
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Collection of product categories"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Collection of products"
+    },
+    "/blogPosts/{postId}": {
+      "schema": "BlogPost",
+      "description": "Collection of blog posts"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    },
+    "/downloads/{downloadId}": {
+      "schema": "Download",
+      "description": "General downloads catalog"
+    }
+  }
+}

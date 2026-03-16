@@ -21,15 +21,21 @@ export const authOptions = {
           where: { email: credentials.email }
         });
 
+        console.log(`[Auth] Attempting login for: ${credentials.email}`);
+
         if (!user) {
+          console.error(`[Auth] User not found: ${credentials.email}`);
           throw new Error("No user found");
         }
 
         const isValid = await compare(credentials.password, user.passwordHash);
 
         if (!isValid) {
+          console.error(`[Auth] Invalid password for: ${credentials.email}`);
           throw new Error("Invalid password");
         }
+
+        console.log(`[Auth] Login successful: ${credentials.email}`);
 
         return {
           id: user.id,
